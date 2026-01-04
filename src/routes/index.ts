@@ -5,6 +5,8 @@ import dashboardRouter from './dashboard';
 import savingsBoxesRouter from './savingsBoxes';
 import reportsRouter from './reports';
 import billsRouter from './bills';
+import assetsRouter from './assets';
+import assetMovementsRouter from './assetMovements';
 
 const router = Router();
 
@@ -14,6 +16,8 @@ router.use('/dashboard', dashboardRouter);
 router.use('/savings-boxes', savingsBoxesRouter);
 router.use('/reports', reportsRouter);
 router.use('/bills', billsRouter);
+router.use('/assets', assetsRouter);
+router.use('/asset-movements', assetMovementsRouter);
 
 // Health check
 router.get('/health', (req, res) => {

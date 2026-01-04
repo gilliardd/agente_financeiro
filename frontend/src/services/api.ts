@@ -367,4 +367,249 @@ export async function getUpcomingBills(days: number = 7): Promise<Bill[]> {
   return response.data.data;
 }
 
+// Assets (Ativos/Investimentos)
+export interface Asset {
+  id: number;
+  name: string;
+  type: 'stocks' | 'fixed_income' | 'funds' | 'crypto' | 'real_estate' | 'savings' | 'other';
+  institution: string | null;
+  ticker: string | null;
+  quantity: number | null;
+  purchase_price: number | null;
+  current_price: number | null;
+  total_invested: number;
+  current_value: number | null;
+  purchase_date: string;
+  maturity_date: string | null;
+  expected_return: number | null;
+  notes: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AssetSummary {
+  totalInvested: number;
+  totalCurrentValue: number;
+  profit: number;
+  profitPercent: number;
+  byType: {
+    type: string;
+    count: number;
+    total_invested: number;
+    current_value: number;
+  }[];
+}
+
+export async function getAssets(type?: string): Promise<Asset[]> {
+  const response = await api.get<Asset[]>('/assets', { params: type ? { type } : undefined });
+  return response.data;
+}
+
+export async function getAssetById(id: number): Promise<Asset> {
+  const response = await api.get<Asset>(`/assets/${id}`);
+  return response.data;
+}
+
+export async function getAssetByTicker(ticker: string): Promise<Asset> {
+  const response = await api.get<Asset>(`/assets/ticker/${ticker}`);
+  return response.data;
+}
+
+export async function createAsset(data: {
+  name: string;
+  type: Asset['type'];
+  institution?: string;
+  ticker?: string;
+  quantity?: number;
+  purchase_price?: number;
+  current_price?: number;
+  total_invested: number;
+  current_value?: number;
+  purchase_date: string;
+  maturity_date?: string;
+  expected_return?: number;
+  notes?: string;
+}): Promise<Asset> {
+  const response = await api.post<Asset>('/assets', data);
+  return response.data;
+}
+
+export async function updateAsset(id: number, data: Partial<{
+  name: string;
+  type: Asset['type'];
+  institution: string;
+  ticker: string;
+  quantity: number;
+  purchase_price: number;
+  current_price: number;
+  total_invested: number;
+  current_value: number;
+  purchase_date: string;
+  maturity_date: string;
+  expected_return: number;
+  notes: string;
+  is_active: boolean;
+}>): Promise<Asset> {
+  const response = await api.put<Asset>(`/assets/${id}`, data);
+  return response.data;
+}
+
+export async function deleteAsset(id: number): Promise<void> {
+  await api.delete(`/assets/${id}`);
+}
+
+export async function updateAssetPrice(id: number, currentPrice: number): Promise<Asset> {
+  const response = await api.patch<Asset>(`/assets/${id}/price`, { current_price: currentPrice });
+  return response.data;
+}
+
+export async function getAssetsSummary(): Promise<AssetSummary> {
+  const response = await api.get<AssetSummary>('/assets/summary');
+  return response.data;
+}
+
+// Asset Movements (Movimentos de Investimentos)
+export interface AssetMovement {
+  id: number;
+  asset_id: number;
+  date: string;
+  movement_type: 'entry' | 'exit' | 'dividend';
+  quantity: number;
+  price: number;
+  total: number;
+  fee_rate: number;
+  total_after_fee: number;
+  current_price: number | null;
+  profit: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  asset_name?: string;
+  asset_type?: string;
+  asset_ticker?: string;
+}
+
+export async function getAssetMovements(params?: {
+  asset_id?: number;
+  start_date?: string;
+  end_date?: string;
+}): Promise<AssetMovement[]> {
+  const response = await api.get<AssetMovement[]>('/asset-movements', { params });
+  return response.data;
+}
+
+export async function getAssetMovementById(id: number): Promise<AssetMovement> {
+  const response = await api.get<AssetMovement>(`/asset-movements/${id}`);
+  return response.data;
+}
+
+export async function createAssetMovement(data: {
+  asset_id: number;
+  date: string;
+  movement_type: 'entry' | 'exit' | 'dividend';
+  quantity: number;
+  price: number;
+  fee_rate?: number;
+  current_price?: number;
+  notes?: string;
+}): Promise<AssetMovement> {
+  const response = await api.post<AssetMovement>('/asset-movements', data);
+  return response.data;
+}
+
+export async function updateAssetMovement(id: number, data: Partial<{
+  asset_id: number;
+  date: string;
+  movement_type: 'entry' | 'exit' | 'dividend';
+  quantity: number;
+  price: number;
+  fee_rate: number;
+  current_price: number;
+  notes: string;
+}>): Promise<AssetMovement> {
+  const response = await api.put<AssetMovement>(`/asset-movements/${id}`, data);
+  return response.data;
+}
+
+export async function deleteAssetMovement(id: number): Promise<void> {
+  await api.delete(`/asset-movements/${id}`);
+}
+
+export async function updateAssetMovementsPrice(assetId: number, currentPrice: number): Promise<void> {
+  await api.patch(`/asset-movements/asset/${assetId}/price`, { current_price: currentPrice });
+}
+
+export async function getAssetMovementsSummary(params?: {
+  start_date?: string;
+  end_date?: string;
+}): Promise<{
+  totalEntries: number;
+  totalExits: number;
+  totalInvested: number;
+  totalProfit: number;
+}> {
+  const response = await api.get('/asset-movements/summary', { params });
+  return response.data;
+}
+
+export interface AnalyticsData {
+  summary: {
+    totalEntries: number;
+    totalExits: number;
+    totalDividends: number;
+    totalInvested: number;
+    totalProfit: number;
+  };
+  byMonth: {
+    month: string;
+    entries: number;
+    exits: number;
+    dividends: number;
+    profit: number;
+  }[];
+  byType: {
+    type: string;
+    entries: number;
+    exits: number;
+    dividends: number;
+    profit: number;
+    count: number;
+  }[];
+  byAsset: {
+    asset_id: number;
+    asset_name: string;
+    asset_ticker: string | null;
+    asset_type: string;
+    entries: number;
+    exits: number;
+    dividends: number;
+    profit: number;
+    quantity: number;
+  }[];
+  purchasesByAsset: {
+    asset_id: number;
+    asset_name: string;
+    asset_ticker: string | null;
+    asset_type: string;
+    total_purchased: number;
+    quantity_purchased: number;
+    avg_price: number;
+  }[];
+  purchasesByCategory: {
+    type: string;
+    total_purchased: number;
+    quantity_purchased: number;
+    asset_count: number;
+  }[];
+}
+
+export async function getAssetMovementsAnalytics(params?: {
+  start_date?: string;
+  end_date?: string;
+}): Promise<AnalyticsData> {
+  const response = await api.get<AnalyticsData>('/asset-movements/analytics', { params });
+  return response.data;
+}
+
 export default api;
