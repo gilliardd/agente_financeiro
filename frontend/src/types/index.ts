@@ -26,6 +26,22 @@ export interface DashboardSummary {
   balance: number;
 }
 
+export interface DashboardSavingsBox {
+  id: number;
+  name: string;
+  currentAmount: number;
+  goalAmount: number;
+  icon: string;
+  color: string;
+  progress: number;
+}
+
+export interface DashboardSavingsBoxes {
+  count: number;
+  totalSaved: number;
+  boxes: DashboardSavingsBox[];
+}
+
 export interface DashboardData {
   summary: DashboardSummary;
   recentTransactions: Transaction[];
@@ -34,6 +50,7 @@ export interface DashboardData {
     total: number;
     color: string;
   }[];
+  savingsBoxes: DashboardSavingsBoxes;
   period: {
     startDate: string;
     endDate: string;

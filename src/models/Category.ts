@@ -63,12 +63,11 @@ export interface CreateCategoryDTO {
 }
 
 export async function createCategory(data: CreateCategoryDTO): Promise<number> {
-  const { ResultSetHeader } = await import('mysql2');
-  const result = await query<typeof ResultSetHeader>(
+  const result = await query<any>(
     `INSERT INTO categories (name, type, icon, color) VALUES (?, ?, ?, ?)`,
     [data.name, data.type, data.icon || 'circle', data.color || '#6B7280']
   );
-  return (result as any).insertId;
+  return result.insertId;
 }
 
 export async function updateCategory(id: number, data: Partial<CreateCategoryDTO>): Promise<void> {

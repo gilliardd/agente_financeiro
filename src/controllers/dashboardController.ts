@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { getDateRangeSummary, getRecentTransactionsByDateRange } from '../models/Transaction';
 import { query } from '../config/database';
+import { getAllSavingsBoxes, getTotalSaved } from '../models/SavingsBox';
 
 export async function getDashboard(req: Request, res: Response): Promise<void> {
   try {
@@ -40,12 +41,29 @@ export async function getDashboard(req: Request, res: Response): Promise<void> {
       [startDate, endDate]
     );
 
+    // Caixinhas (savings boxes)
+    const savingsBoxes = await getAllSavingsBoxes();
+    const totalSaved = await getTotalSaved();
+
     res.json({
       success: true,
       data: {
         summary,
         recentTransactions,
         expensesByCategory,
+        savingsBoxes: {
+          count: savingsBoxes.length,
+          totalSaved,
+          boxes: savingsBoxes.map((box) => ({
+            id: box.id,
+            name: box.name,
+            currentAmount: Number(box.current_amount),
+            goalAmount: Number(box.goal_amount),
+            icon: box.icon,
+            color: box.color,
+            progress: box.goal_amount > 0 ? Math.min(100, (Number(box.current_amount) / Number(box.goal_amount)) * 100) : 0,
+          })),
+        },
         period: { startDate, endDate },
       },
     });

@@ -1,4 +1,7 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Categories from './pages/Categories';
@@ -22,22 +25,43 @@ function ComingSoon({ title }: { title: string }) {
   );
 }
 
+function LoginRoute() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Login />;
+}
+
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/transacoes" element={<Transactions />} />
-        <Route path="/categorias" element={<Categories />} />
-        <Route path="/caixinhas" element={<SavingsBoxes />} />
-        <Route path="/contas" element={<Bills />} />
-        <Route path="/orcamentos" element={<ComingSoon title="Orcamentos" />} />
-        <Route path="/investimentos/cadastro" element={<InvestCadastro />} />
-        <Route path="/investimentos/movimento" element={<InvestMovimento />} />
-        <Route path="/investimentos/analise" element={<InvestAnalise />} />
-        <Route path="/relatorios" element={<Reports />} />
-        <Route path="/configuracoes" element={<ComingSoon title="Configuracoes" />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginRoute />} />
+          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/transacoes" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+          <Route path="/categorias" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
+          <Route path="/caixinhas" element={<ProtectedRoute><SavingsBoxes /></ProtectedRoute>} />
+          <Route path="/contas" element={<ProtectedRoute><Bills /></ProtectedRoute>} />
+          <Route path="/orcamentos" element={<ProtectedRoute><ComingSoon title="Orcamentos" /></ProtectedRoute>} />
+          <Route path="/investimentos/cadastro" element={<ProtectedRoute><InvestCadastro /></ProtectedRoute>} />
+          <Route path="/investimentos/movimento" element={<ProtectedRoute><InvestMovimento /></ProtectedRoute>} />
+          <Route path="/investimentos/analise" element={<ProtectedRoute><InvestAnalise /></ProtectedRoute>} />
+          <Route path="/relatorios" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+          <Route path="/configuracoes" element={<ProtectedRoute><ComingSoon title="Configuracoes" /></ProtectedRoute>} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }

@@ -4,6 +4,7 @@ import BalanceCard from '../components/dashboard/BalanceCard';
 import CategoryPieChart from '../components/dashboard/CategoryPieChart';
 import RecentTransactions from '../components/dashboard/RecentTransactions';
 import IncomeExpenseChart from '../components/dashboard/IncomeExpenseChart';
+import SavingsBoxesSummary from '../components/dashboard/SavingsBoxesSummary';
 import { getDashboard, getReportsByPeriod, type PeriodReport } from '../services/api';
 import { formatDate } from '../utils/formatters';
 import type { DashboardData } from '../types';
@@ -263,13 +264,14 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Graficos e transacoes */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Graficos, transacoes e caixinhas */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <CategoryPieChart
           data={data.expensesByCategory}
           title="Despesas por Categoria"
         />
         <RecentTransactions transactions={data.recentTransactions} />
+        <SavingsBoxesSummary data={data.savingsBoxes} />
       </div>
     </Layout>
   );

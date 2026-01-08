@@ -8,6 +8,7 @@ import { getPool } from './config/database';
 import routes from './routes';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler';
 import { startBot, stopBot } from './bot';
+import { ensureAdminExists } from './models/User';
 
 async function main(): Promise<void> {
   console.log('\n🚀 Iniciando FinBot...\n');
@@ -18,6 +19,8 @@ async function main(): Promise<void> {
   // Inicializa conexao com banco de dados
   try {
     await getPool();
+    // Garante que existe um usuario admin
+    await ensureAdminExists();
   } catch (error) {
     console.error('❌ Falha ao conectar ao banco de dados. Verifique as configuracoes.');
     process.exit(1);

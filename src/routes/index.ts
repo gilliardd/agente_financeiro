@@ -7,9 +7,13 @@ import reportsRouter from './reports';
 import billsRouter from './bills';
 import assetsRouter from './assets';
 import assetMovementsRouter from './assetMovements';
+import authRouter from './auth';
+import systemRouter from './system';
 
 const router = Router();
 
+router.use('/auth', authRouter);
+router.use('/system', systemRouter);
 router.use('/transactions', transactionsRouter);
 router.use('/categories', categoriesRouter);
 router.use('/dashboard', dashboardRouter);
