@@ -40,14 +40,20 @@ router.delete('/reset', async (req: Request, res: Response) => {
     // Clear asset movements
     await query('TRUNCATE TABLE asset_movements');
 
-    // Clear assets
-    await query('TRUNCATE TABLE assets');
+    // Clear investment transactions
+    await query('TRUNCATE TABLE investment_transactions');
+
+    // Clear investments
+    await query('TRUNCATE TABLE investments');
 
     // Clear transactions
     await query('TRUNCATE TABLE transactions');
 
     // Clear bills
     await query('TRUNCATE TABLE bills');
+
+    // Clear savings box transactions
+    await query('TRUNCATE TABLE savings_box_transactions');
 
     // Clear savings boxes
     await query('TRUNCATE TABLE savings_boxes');
