@@ -8,6 +8,19 @@ const api = axios.create({
   },
 });
 
+// Interceptor para debug
+api.interceptors.response.use(
+  (response) => {
+    console.log(`[API] ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+    return response;
+  },
+  (error) => {
+    console.log(`[API ERROR] ${error.config?.method?.toUpperCase()} ${error.config?.url} - Status: ${error.response?.status || 'N/A'}`);
+    console.log('[API ERROR] Response data:', error.response?.data);
+    return Promise.reject(error);
+  }
+);
+
 export async function getDashboard(params?: {
   startDate?: string;
   endDate?: string;
@@ -610,6 +623,172 @@ export async function getAssetMovementsAnalytics(params?: {
 }): Promise<AnalyticsData> {
   const response = await api.get<AnalyticsData>('/asset-movements/analytics', { params });
   return response.data;
+}
+
+// Budgets (Orcamentos)
+export type BudgetRule = '50-30-20' | '60-20-20' | '40-30-30' | 'custom';
+export type BudgetCategory = 'necessidades' | 'estilo_vida' | 'futuro';
+
+export interface BudgetItem {
+  id: number;
+  budget_id: number;
+  category: BudgetCategory;
+  name: string;
+  planned_amount: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Budget {
+  id: number;
+  year: number;
+  month: number;
+  rule: BudgetRule;
+  expected_income: number;
+  custom_necessidades: number | null;
+  custom_estilo_vida: number | null;
+  custom_futuro: number | null;
+  created_at: string;
+  updated_at: string;
+  items?: BudgetItem[];
+}
+
+export interface BudgetRuleInfo {
+  id: BudgetRule;
+  name: string;
+  necessidades: number;
+  estilo_vida: number;
+  futuro: number;
+}
+
+export interface BudgetSummary {
+  budget: Budget;
+  byCategory: {
+    category: BudgetCategory;
+    planned: number;
+    limit: number;
+    percentage: number;
+  }[];
+  totals: {
+    totalPlanned: number;
+    remaining: number;
+  };
+}
+
+export async function getBudgetRules(): Promise<BudgetRuleInfo[]> {
+  const response = await api.get<ApiResponse<BudgetRuleInfo[]>>('/budgets/rules');
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.error || 'Erro ao carregar regras');
+  }
+  return response.data.data;
+}
+
+export async function getBudgets(): Promise<Budget[]> {
+  const response = await api.get<ApiResponse<Budget[]>>('/budgets');
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.error || 'Erro ao carregar orcamentos');
+  }
+  return response.data.data;
+}
+
+export async function getBudgetByMonth(year: number, month: number): Promise<Budget | null> {
+  try {
+    const response = await api.get<ApiResponse<Budget>>(`/budgets/${year}/${month}`);
+    if (!response.data.success || !response.data.data) {
+      // Se não tem dados, retorna null (orçamento não existe)
+      return null;
+    }
+    return response.data.data;
+  } catch (error: any) {
+    // Se for 404, retorna null (orçamento não existe)
+    if (error.response?.status === 404) {
+      return null;
+    }
+    // Outros erros, lança a exceção
+    throw error;
+  }
+}
+
+export async function getBudgetSummary(year: number, month: number): Promise<BudgetSummary> {
+  const response = await api.get<ApiResponse<BudgetSummary>>(`/budgets/${year}/${month}/summary`);
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.error || 'Erro ao carregar resumo');
+  }
+  return response.data.data;
+}
+
+export async function createBudget(data: {
+  year: number;
+  month: number;
+  rule: BudgetRule;
+  expected_income: number;
+  custom_necessidades?: number;
+  custom_estilo_vida?: number;
+  custom_futuro?: number;
+}): Promise<{ id: number }> {
+  const response = await api.post<ApiResponse<{ id: number }>>('/budgets', data);
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.error || 'Erro ao criar orcamento');
+  }
+  return response.data.data;
+}
+
+export async function updateBudget(year: number, month: number, data: {
+  rule?: BudgetRule;
+  expected_income?: number;
+  custom_necessidades?: number;
+  custom_estilo_vida?: number;
+  custom_futuro?: number;
+}): Promise<void> {
+  const response = await api.put<ApiResponse<void>>(`/budgets/${year}/${month}`, data);
+  if (!response.data.success) {
+    throw new Error(response.data.error || 'Erro ao atualizar orcamento');
+  }
+}
+
+export async function deleteBudget(year: number, month: number): Promise<void> {
+  const response = await api.delete<ApiResponse<void>>(`/budgets/${year}/${month}`);
+  if (!response.data.success) {
+    throw new Error(response.data.error || 'Erro ao excluir orcamento');
+  }
+}
+
+export async function copyBudgetFromPrevious(year: number, month: number): Promise<{ id: number }> {
+  const response = await api.post<ApiResponse<{ id: number }>>(`/budgets/${year}/${month}/copy`);
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.error || 'Erro ao copiar orcamento');
+  }
+  return response.data.data;
+}
+
+export async function addBudgetItem(year: number, month: number, data: {
+  category: BudgetCategory;
+  name: string;
+  planned_amount: number;
+}): Promise<{ id: number }> {
+  const response = await api.post<ApiResponse<{ id: number }>>(`/budgets/${year}/${month}/items`, data);
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.error || 'Erro ao adicionar item');
+  }
+  return response.data.data;
+}
+
+export async function updateBudgetItem(itemId: number, data: {
+  category?: BudgetCategory;
+  name?: string;
+  planned_amount?: number;
+}): Promise<void> {
+  const response = await api.put<ApiResponse<void>>(`/budgets/items/${itemId}`, data);
+  if (!response.data.success) {
+    throw new Error(response.data.error || 'Erro ao atualizar item');
+  }
+}
+
+export async function deleteBudgetItem(itemId: number): Promise<void> {
+  const response = await api.delete<ApiResponse<void>>(`/budgets/items/${itemId}`);
+  if (!response.data.success) {
+    throw new Error(response.data.error || 'Erro ao excluir item');
+  }
 }
 
 export default api;

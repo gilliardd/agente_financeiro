@@ -8,6 +8,7 @@ import Categories from './pages/Categories';
 import SavingsBoxes from './pages/SavingsBoxes';
 import Reports from './pages/Reports';
 import Bills from './pages/Bills';
+import Orcamentos from './pages/Orcamentos';
 import InvestCadastro from './pages/investments/Cadastro';
 import InvestMovimento from './pages/investments/Movimento';
 import InvestAnalise from './pages/investments/Analise';
@@ -54,7 +55,7 @@ export default function App() {
           <Route path="/categorias" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
           <Route path="/caixinhas" element={<ProtectedRoute><SavingsBoxes /></ProtectedRoute>} />
           <Route path="/contas" element={<ProtectedRoute><Bills /></ProtectedRoute>} />
-          <Route path="/orcamentos" element={<ProtectedRoute><ComingSoon title="Orcamentos" /></ProtectedRoute>} />
+          <Route path="/orcamentos" element={<ProtectedRoute><Orcamentos /></ProtectedRoute>} />
           <Route path="/investimentos/cadastro" element={<ProtectedRoute><InvestCadastro /></ProtectedRoute>} />
           <Route path="/investimentos/movimento" element={<ProtectedRoute><InvestMovimento /></ProtectedRoute>} />
           <Route path="/investimentos/analise" element={<ProtectedRoute><InvestAnalise /></ProtectedRoute>} />

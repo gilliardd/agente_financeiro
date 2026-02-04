@@ -258,4 +258,39 @@ INSERT IGNORE INTO settings (`key`, value, description) VALUES
 ('daily_summary', 'true', 'Enviar resumo diario'),
 ('weekly_report', 'true', 'Enviar relatorio semanal');
 
+-- =====================================================
+-- TABELA: monthly_budgets (Orcamentos mensais com regras)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS monthly_budgets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    year INT NOT NULL,
+    month INT NOT NULL,
+    rule ENUM('50-30-20', '60-20-20', '40-30-30', 'custom') NOT NULL DEFAULT '50-30-20',
+    expected_income DECIMAL(15, 2) NOT NULL,
+    custom_necessidades INT DEFAULT NULL,
+    custom_estilo_vida INT DEFAULT NULL,
+    custom_futuro INT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_monthly_budget_period (year, month),
+    INDEX idx_monthly_budgets_period (year, month)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
+-- TABELA: monthly_budget_items (Itens dos orcamentos mensais)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS monthly_budget_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    budget_id INT NOT NULL,
+    category ENUM('necessidades', 'estilo_vida', 'futuro') NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    planned_amount DECIMAL(15, 2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (budget_id) REFERENCES monthly_budgets(id) ON DELETE CASCADE,
+    INDEX idx_budget_items_category (category)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;

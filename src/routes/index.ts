@@ -5,6 +5,7 @@ import dashboardRouter from './dashboard';
 import savingsBoxesRouter from './savingsBoxes';
 import reportsRouter from './reports';
 import billsRouter from './bills';
+import budgetsRouter from './budgets';
 import assetsRouter from './assets';
 import assetMovementsRouter from './assetMovements';
 import authRouter from './auth';
@@ -20,6 +21,7 @@ router.use('/dashboard', dashboardRouter);
 router.use('/savings-boxes', savingsBoxesRouter);
 router.use('/reports', reportsRouter);
 router.use('/bills', billsRouter);
+router.use('/budgets', budgetsRouter);
 router.use('/assets', assetsRouter);
 router.use('/asset-movements', assetMovementsRouter);
 
