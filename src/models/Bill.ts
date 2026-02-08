@@ -9,6 +9,7 @@ export interface Bill {
   due_day: number;
   category_id: number | null;
   is_recurring: boolean;
+  repeat_months: number | null;
   reminder_days_before: number;
   is_active: boolean;
   last_reminder_date: string | null;
@@ -28,6 +29,7 @@ export async function getAllBills(): Promise<BillWithCategory[]> {
      FROM bills b
      LEFT JOIN categories c ON b.category_id = c.id
      WHERE b.is_active = true
+       AND (b.repeat_months IS NULL OR DATE_ADD(b.created_at, INTERVAL b.repeat_months MONTH) >= CURDATE())
      ORDER BY b.due_day`
   );
 }
@@ -58,11 +60,12 @@ export async function createBill(data: {
   due_day: number;
   category_id?: number;
   is_recurring?: boolean;
+  repeat_months?: number | null;
   reminder_days_before?: number;
 }): Promise<number> {
   const result = await query<ResultSetHeader>(
-    `INSERT INTO bills (name, description, amount, due_day, category_id, is_recurring, reminder_days_before)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO bills (name, description, amount, due_day, category_id, is_recurring, repeat_months, reminder_days_before)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       data.name,
       data.description || null,
@@ -70,6 +73,7 @@ export async function createBill(data: {
       data.due_day,
       data.category_id || null,
       data.is_recurring ?? true,
+      data.repeat_months ?? null,
       data.reminder_days_before ?? 1,
     ]
   );
@@ -85,6 +89,7 @@ export async function updateBill(
     due_day?: number;
     category_id?: number;
     is_recurring?: boolean;
+    repeat_months?: number | null;
     reminder_days_before?: number;
   }
 ): Promise<void> {
@@ -114,6 +119,10 @@ export async function updateBill(
   if (data.is_recurring !== undefined) {
     fields.push('is_recurring = ?');
     values.push(data.is_recurring);
+  }
+  if (data.repeat_months !== undefined) {
+    fields.push('repeat_months = ?');
+    values.push(data.repeat_months);
   }
   if (data.reminder_days_before !== undefined) {
     fields.push('reminder_days_before = ?');

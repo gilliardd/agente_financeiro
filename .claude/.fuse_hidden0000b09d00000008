@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(tree:*)",
+      "Bash(wc:*)",
+      "Bash(npm run db:migrate:*)",
+      "Bash(/home/gilliard/.nvm/versions/node/v22.14.0/bin/npm run db:migrate)",
+      "Bash(node_modules/.bin/tsc:*)"
+    ]
+  }
+}

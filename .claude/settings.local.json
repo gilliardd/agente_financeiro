@@ -7,7 +7,12 @@
       "Bash(wc:*)",
       "Bash(npm run db:migrate:*)",
       "Bash(/home/gilliard/.nvm/versions/node/v22.14.0/bin/npm run db:migrate)",
-      "Bash(node_modules/.bin/tsc:*)"
+      "Bash(node_modules/.bin/tsc:*)",
+      "Bash(mysql -h 31.97.91.252 -P 3306 -u halarumd_finance -pf6Kjp6z8KwkZ halarumd_finance -e \"ALTER TABLE bills ADD COLUMN repeat_months INT DEFAULT NULL AFTER is_recurring;\")",
+      "Bash(dpkg:*)",
+      "Bash(node -e \"\nconst mysql = require\\(''mysql2/promise''\\);\nasync function run\\(\\) {\n  const conn = await mysql.createConnection\\({\n    host: ''31.97.91.252'',\n    port: 3306,\n    user: ''halarumd_finance'',\n    password: ''f6Kjp6z8KwkZ'',\n    database: ''halarumd_finance''\n  }\\);\n  try {\n    await conn.execute\\(''ALTER TABLE bills ADD COLUMN repeat_months INT DEFAULT NULL AFTER is_recurring''\\);\n    console.log\\(''Coluna repeat_months adicionada com sucesso!''\\);\n  } catch\\(e\\) {\n    if \\(e.code === ''ER_DUP_FIELDNAME''\\) {\n      console.log\\(''Coluna repeat_months ja existe.''\\);\n    } else {\n      throw e;\n    }\n  }\n  await conn.end\\(\\);\n}\nrun\\(\\).catch\\(e => { console.error\\(e.message\\); process.exit\\(1\\); }\\);\n\")",
+      "Bash(export PATH=\"/home/gilliard/.nvm/versions/node/v22.21.1/bin:$PATH\")",
+      "Bash(node -e \"\nconst mysql = require\\(''/media/gilliard/Desenvolvimento1/bo_financeiro/node_modules/mysql2/promise''\\);\nasync function run\\(\\) {\n  const conn = await mysql.createConnection\\({\n    host: ''31.97.91.252'',\n    port: 3306,\n    user: ''halarumd_finance'',\n    password: ''f6Kjp6z8KwkZ'',\n    database: ''halarumd_finance''\n  }\\);\n  try {\n    await conn.execute\\(''ALTER TABLE bills ADD COLUMN repeat_months INT DEFAULT NULL AFTER is_recurring''\\);\n    console.log\\(''Coluna repeat_months adicionada com sucesso!''\\);\n  } catch\\(e\\) {\n    if \\(e.code === ''ER_DUP_FIELDNAME''\\) {\n      console.log\\(''Coluna repeat_months ja existe.''\\);\n    } else {\n      throw e;\n    }\n  }\n  await conn.end\\(\\);\n}\nrun\\(\\).catch\\(e => { console.error\\(e.message\\); process.exit\\(1\\); }\\);\n\")"
     ]
   }
 }

@@ -304,6 +304,7 @@ export interface Bill {
   category_name?: string;
   category_color?: string;
   is_recurring: boolean;
+  repeat_months: number | null;
   reminder_days_before: number;
   is_active: boolean;
   last_reminder_date: string | null;
@@ -334,6 +335,7 @@ export async function createBill(data: {
   due_day: number;
   category_id?: number;
   is_recurring?: boolean;
+  repeat_months?: number | null;
   reminder_days_before?: number;
 }): Promise<{ id: number }> {
   const response = await api.post<ApiResponse<{ id: number }>>('/bills', data);
@@ -350,6 +352,7 @@ export async function updateBill(id: number, data: {
   due_day?: number;
   category_id?: number;
   is_recurring?: boolean;
+  repeat_months?: number | null;
   reminder_days_before?: number;
 }): Promise<void> {
   const response = await api.put<ApiResponse<void>>(`/bills/${id}`, data);

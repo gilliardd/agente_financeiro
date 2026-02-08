@@ -198,6 +198,7 @@ CREATE TABLE IF NOT EXISTS bills (
     due_day INT NOT NULL,
     category_id INT,
     is_recurring BOOLEAN DEFAULT TRUE,
+    repeat_months INT DEFAULT NULL,
     reminder_days_before INT DEFAULT 1,
     is_active BOOLEAN DEFAULT TRUE,
     last_reminder_date DATE,

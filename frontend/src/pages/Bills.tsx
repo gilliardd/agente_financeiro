@@ -3,6 +3,7 @@ import Layout from '../components/layout/Layout';
 import {
   getBills,
   createBill,
+  updateBill,
   deleteBill,
   markBillAsPaid,
   getCategories,
@@ -10,7 +11,7 @@ import {
 } from '../services/api';
 import type { Category } from '../types';
 import { formatCurrency } from '../utils/formatters';
-import { Plus, Trash2, Check, Bell, Calendar, X } from 'lucide-react';
+import { Plus, Trash2, Check, Bell, Calendar, X, Pencil } from 'lucide-react';
 
 export default function Bills() {
   const [bills, setBills] = useState<Bill[]>([]);
@@ -19,6 +20,7 @@ export default function Bills() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [editingBill, setEditingBill] = useState<Bill | null>(null);
 
   // Form state
   const [formName, setFormName] = useState('');
@@ -27,6 +29,8 @@ export default function Bills() {
   const [formDueDay, setFormDueDay] = useState('');
   const [formCategoryId, setFormCategoryId] = useState<string>('');
   const [formReminderDays, setFormReminderDays] = useState('1');
+  const [formRepeatType, setFormRepeatType] = useState<'recurring' | 'fixed'>('recurring');
+  const [formRepeatMonths, setFormRepeatMonths] = useState('');
 
   useEffect(() => {
     loadData();
@@ -60,6 +64,7 @@ export default function Bills() {
         due_day: parseInt(formDueDay, 10),
         category_id: formCategoryId ? parseInt(formCategoryId, 10) : undefined,
         is_recurring: true,
+        repeat_months: formRepeatType === 'fixed' && formRepeatMonths ? parseInt(formRepeatMonths, 10) : null,
         reminder_days_before: parseInt(formReminderDays, 10),
       });
       setShowModal(false);
@@ -89,6 +94,42 @@ export default function Bills() {
     }
   }
 
+  function handleEdit(bill: Bill) {
+    setEditingBill(bill);
+    setFormName(bill.name);
+    setFormDescription(bill.description || '');
+    setFormAmount(String(bill.amount));
+    setFormDueDay(String(bill.due_day));
+    setFormCategoryId(bill.category_id ? String(bill.category_id) : '');
+    setFormReminderDays(String(bill.reminder_days_before));
+    setFormRepeatType(bill.repeat_months ? 'fixed' : 'recurring');
+    setFormRepeatMonths(bill.repeat_months ? String(bill.repeat_months) : '');
+    setShowModal(true);
+  }
+
+  async function handleUpdate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingBill) return;
+    try {
+      await updateBill(editingBill.id, {
+        name: formName,
+        description: formDescription || undefined,
+        amount: parseFloat(formAmount),
+        due_day: parseInt(formDueDay, 10),
+        category_id: formCategoryId ? parseInt(formCategoryId, 10) : undefined,
+        is_recurring: true,
+        repeat_months: formRepeatType === 'fixed' && formRepeatMonths ? parseInt(formRepeatMonths, 10) : null,
+        reminder_days_before: parseInt(formReminderDays, 10),
+      });
+      setShowModal(false);
+      setEditingBill(null);
+      resetForm();
+      loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao atualizar conta');
+    }
+  }
+
   function resetForm() {
     setFormName('');
     setFormDescription('');
@@ -96,6 +137,8 @@ export default function Bills() {
     setFormDueDay('');
     setFormCategoryId('');
     setFormReminderDays('1');
+    setFormRepeatType('recurring');
+    setFormRepeatMonths('');
   }
 
   function getDaysUntilDue(dueDay: number): number {
@@ -193,7 +236,11 @@ export default function Bills() {
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${status.color}`}>
                           {status.text}
                         </span>
-                        {bill.is_recurring && (
+                        {bill.repeat_months ? (
+                          <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+                            {bill.repeat_months} {bill.repeat_months === 1 ? 'mes' : 'meses'}
+                          </span>
+                        ) : (
                           <span className="text-xs text-gray-400">Recorrente</span>
                         )}
                       </div>
@@ -236,6 +283,13 @@ export default function Bills() {
                         </button>
                       )}
                       <button
+                        onClick={() => handleEdit(bill)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Editar"
+                      >
+                        <Pencil className="w-5 h-5" />
+                      </button>
+                      <button
                         onClick={() => handleDelete(bill.id)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Excluir"
@@ -256,10 +310,13 @@ export default function Bills() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
             <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">Nova Conta a Pagar</h2>
+              <h2 className="text-lg font-semibold text-gray-900">
+                {editingBill ? 'Editar Conta a Pagar' : 'Nova Conta a Pagar'}
+              </h2>
               <button
                 onClick={() => {
                   setShowModal(false);
+                  setEditingBill(null);
                   resetForm();
                 }}
                 className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
@@ -267,7 +324,7 @@ export default function Bills() {
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
-            <form onSubmit={handleCreate} className="p-4 space-y-4">
+            <form onSubmit={editingBill ? handleUpdate : handleCreate} className="p-4 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Nome da conta *
@@ -360,11 +417,57 @@ export default function Bills() {
                   </select>
                 </div>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Repetição
+                </label>
+                <div className="flex gap-3 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => { setFormRepeatType('recurring'); setFormRepeatMonths(''); }}
+                    className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                      formRepeatType === 'recurring'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700 font-medium'
+                        : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    Recorrente
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormRepeatType('fixed')}
+                    className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                      formRepeatType === 'fixed'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700 font-medium'
+                        : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    Por periodo
+                  </button>
+                </div>
+                {formRepeatType === 'fixed' && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">Repetir por</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="120"
+                      value={formRepeatMonths}
+                      onChange={(e) => setFormRepeatMonths(e.target.value)}
+                      placeholder="Ex: 12"
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center"
+                      required
+                    />
+                    <span className="text-sm text-gray-600">meses</span>
+                  </div>
+                )}
+              </div>
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => {
                     setShowModal(false);
+                    setEditingBill(null);
                     resetForm();
                   }}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -375,7 +478,7 @@ export default function Bills() {
                   type="submit"
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Criar Conta
+                  {editingBill ? 'Salvar Alterações' : 'Criar Conta'}
                 </button>
               </div>
             </form>
