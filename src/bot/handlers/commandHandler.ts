@@ -23,6 +23,7 @@ import { getMainMenuKeyboard } from '../keyboards/inlineKeyboards';
 
 export async function handleStart(bot: TelegramBot, msg: TelegramBot.Message): Promise<void> {
   const chatId = msg.chat.id;
+  console.log(`📱 /start recebido - Chat ID: ${chatId} | User: ${msg.chat.first_name || msg.chat.username}`);
 
   const welcomeMessage = `
 🤖 *Bem-vindo ao FinBot!*

@@ -124,8 +124,8 @@ export async function checkAndSendReminders(bot: TelegramBot): Promise<void> {
         }
       }
 
-      // Envia lembrete 1 dia antes ou no dia do vencimento
-      if (daysUntilDue === 1 || daysUntilDue === 0) {
+      // Envia lembrete de acordo com o reminder_days_before configurado ou no dia do vencimento
+      if (daysUntilDue <= bill.reminder_days_before) {
         await sendBillReminder(bot, Number(chatId), bill, daysUntilDue);
       }
     }

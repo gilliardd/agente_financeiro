@@ -9,6 +9,7 @@ import {
   getUpcomingBills,
   getMonthlyBillsTotal,
 } from '../models/Bill';
+import { createTransaction } from '../models/Transaction';
 
 export async function list(req: Request, res: Response): Promise<void> {
   try {
@@ -133,7 +134,20 @@ export async function markPaid(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    await markBillAsPaid(Number(id), date);
+    const paidDate = date || new Date().toISOString().split('T')[0];
+    await markBillAsPaid(Number(id), paidDate);
+
+    // Cria transacao de despesa automaticamente
+    await createTransaction({
+      type: 'expense',
+      amount: bill.amount,
+      description: bill.name,
+      category_id: bill.category_id || 8,
+      date: paidDate,
+      notes: `Pagamento de conta - ${bill.description || ''}`,
+      source: 'bill_payment',
+    });
+
     res.json({ success: true });
   } catch (error) {
     console.error('Erro ao marcar conta como paga:', error);
