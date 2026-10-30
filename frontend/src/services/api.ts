@@ -303,6 +303,7 @@ export interface Bill {
   category_id: number | null;
   category_name?: string;
   category_color?: string;
+  payment_method: 'boleto' | 'cartao';
   is_recurring: boolean;
   repeat_months: number | null;
   reminder_days_before: number;
@@ -334,6 +335,7 @@ export async function createBill(data: {
   amount: number;
   due_day: number;
   category_id?: number;
+  payment_method?: 'boleto' | 'cartao';
   is_recurring?: boolean;
   repeat_months?: number | null;
   reminder_days_before?: number;
@@ -351,6 +353,7 @@ export async function updateBill(id: number, data: {
   amount?: number;
   due_day?: number;
   category_id?: number;
+  payment_method?: 'boleto' | 'cartao';
   is_recurring?: boolean;
   repeat_months?: number | null;
   reminder_days_before?: number;

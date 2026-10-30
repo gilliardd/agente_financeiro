@@ -41,7 +41,7 @@ export async function getById(req: Request, res: Response): Promise<void> {
 
 export async function create(req: Request, res: Response): Promise<void> {
   try {
-    const { name, description, amount, due_day, category_id, is_recurring, repeat_months, reminder_days_before } = req.body;
+    const { name, description, amount, due_day, category_id, payment_method, is_recurring, repeat_months, reminder_days_before } = req.body;
 
     if (!name || !amount || !due_day) {
       res.status(400).json({ success: false, error: 'Nome, valor e dia de vencimento sao obrigatorios' });
@@ -53,12 +53,18 @@ export async function create(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    if (payment_method !== undefined && payment_method !== 'boleto' && payment_method !== 'cartao') {
+      res.status(400).json({ success: false, error: 'Forma de pagamento invalida' });
+      return;
+    }
+
     const id = await createBill({
       name,
       description,
       amount: Number(amount),
       due_day: Number(due_day),
       category_id: category_id ? Number(category_id) : undefined,
+      payment_method,
       is_recurring,
       repeat_months: repeat_months !== undefined && repeat_months !== null ? Number(repeat_months) : null,
       reminder_days_before: reminder_days_before ? Number(reminder_days_before) : 1,
@@ -74,7 +80,7 @@ export async function create(req: Request, res: Response): Promise<void> {
 export async function update(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const { name, description, amount, due_day, category_id, is_recurring, repeat_months, reminder_days_before } = req.body;
+    const { name, description, amount, due_day, category_id, payment_method, is_recurring, repeat_months, reminder_days_before } = req.body;
 
     const bill = await getBillById(Number(id));
     if (!bill) {
@@ -87,12 +93,18 @@ export async function update(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    if (payment_method !== undefined && payment_method !== 'boleto' && payment_method !== 'cartao') {
+      res.status(400).json({ success: false, error: 'Forma de pagamento invalida' });
+      return;
+    }
+
     await updateBill(Number(id), {
       name,
       description,
       amount: amount !== undefined ? Number(amount) : undefined,
       due_day: due_day !== undefined ? Number(due_day) : undefined,
       category_id: category_id !== undefined ? Number(category_id) : undefined,
+      payment_method,
       is_recurring,
       repeat_months: repeat_months !== undefined ? (repeat_months !== null ? Number(repeat_months) : null) : undefined,
       reminder_days_before: reminder_days_before !== undefined ? Number(reminder_days_before) : undefined,

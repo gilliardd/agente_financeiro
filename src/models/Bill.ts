@@ -1,6 +1,8 @@
 import { query } from '../config/database';
 import { ResultSetHeader } from 'mysql2';
 
+export type PaymentMethod = 'boleto' | 'cartao';
+
 export interface Bill {
   id: number;
   name: string;
@@ -8,6 +10,7 @@ export interface Bill {
   amount: number;
   due_day: number;
   category_id: number | null;
+  payment_method: PaymentMethod;
   is_recurring: boolean;
   repeat_months: number | null;
   reminder_days_before: number;
@@ -59,19 +62,21 @@ export async function createBill(data: {
   amount: number;
   due_day: number;
   category_id?: number;
+  payment_method?: PaymentMethod;
   is_recurring?: boolean;
   repeat_months?: number | null;
   reminder_days_before?: number;
 }): Promise<number> {
   const result = await query<ResultSetHeader>(
-    `INSERT INTO bills (name, description, amount, due_day, category_id, is_recurring, repeat_months, reminder_days_before)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO bills (name, description, amount, due_day, category_id, payment_method, is_recurring, repeat_months, reminder_days_before)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       data.name,
       data.description || null,
       data.amount,
       data.due_day,
       data.category_id || null,
+      data.payment_method ?? 'boleto',
       data.is_recurring ?? true,
       data.repeat_months ?? null,
       data.reminder_days_before ?? 1,
@@ -88,6 +93,7 @@ export async function updateBill(
     amount?: number;
     due_day?: number;
     category_id?: number;
+    payment_method?: PaymentMethod;
     is_recurring?: boolean;
     repeat_months?: number | null;
     reminder_days_before?: number;
@@ -115,6 +121,10 @@ export async function updateBill(
   if (data.category_id !== undefined) {
     fields.push('category_id = ?');
     values.push(data.category_id);
+  }
+  if (data.payment_method !== undefined) {
+    fields.push('payment_method = ?');
+    values.push(data.payment_method);
   }
   if (data.is_recurring !== undefined) {
     fields.push('is_recurring = ?');

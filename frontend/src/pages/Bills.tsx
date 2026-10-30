@@ -11,11 +11,11 @@ import {
 } from '../services/api';
 import type { Category } from '../types';
 import { formatCurrency } from '../utils/formatters';
-import { Plus, Trash2, Check, Bell, Calendar, X, Pencil } from 'lucide-react';
+import { Plus, Trash2, Check, Bell, Calendar, X, Pencil, CreditCard, FileText } from 'lucide-react';
 
 export default function Bills() {
   const [bills, setBills] = useState<Bill[]>([]);
-  const [total, setTotal] = useState(0);
+  const [activeTab, setActiveTab] = useState<'boleto' | 'cartao'>('boleto');
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +45,6 @@ export default function Bills() {
         getCategories('expense'),
       ]);
       setBills(billsData.bills);
-      setTotal(billsData.total);
       setCategories(categoriesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
@@ -63,6 +62,7 @@ export default function Bills() {
         amount: parseFloat(formAmount),
         due_day: parseInt(formDueDay, 10),
         category_id: formCategoryId ? parseInt(formCategoryId, 10) : undefined,
+        payment_method: activeTab,
         is_recurring: true,
         repeat_months: formRepeatType === 'fixed' && formRepeatMonths ? parseInt(formRepeatMonths, 10) : null,
         reminder_days_before: parseInt(formReminderDays, 10),
@@ -117,6 +117,7 @@ export default function Bills() {
         amount: parseFloat(formAmount),
         due_day: parseInt(formDueDay, 10),
         category_id: formCategoryId ? parseInt(formCategoryId, 10) : undefined,
+        payment_method: activeTab,
         is_recurring: true,
         repeat_months: formRepeatType === 'fixed' && formRepeatMonths ? parseInt(formRepeatMonths, 10) : null,
         reminder_days_before: parseInt(formReminderDays, 10),
@@ -176,14 +177,41 @@ export default function Bills() {
     return { text: `Dia ${bill.due_day}`, color: 'text-gray-600 bg-gray-100' };
   }
 
+  const visibleBills = bills.filter((b) => (b.payment_method || 'boleto') === activeTab);
+  const total = visibleBills.reduce((sum, b) => sum + Number(b.amount), 0);
+  const isCard = activeTab === 'cartao';
+
   return (
     <Layout title="Contas a Pagar">
       <div className="space-y-6">
+        {/* Abas */}
+        <div className="flex gap-2 border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab('boleto')}
+            className={`flex items-center gap-2 px-4 py-2 -mb-px border-b-2 text-sm font-medium transition-colors ${
+              !isCard ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            Contas
+          </button>
+          <button
+            onClick={() => setActiveTab('cartao')}
+            className={`flex items-center gap-2 px-4 py-2 -mb-px border-b-2 text-sm font-medium transition-colors ${
+              isCard ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <CreditCard className="w-4 h-4" />
+            Cartão de Crédito
+          </button>
+        </div>
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <p className="text-gray-500">
-              Total mensal: <span className="font-semibold text-gray-900">{formatCurrency(total)}</span>
+              {isCard ? 'Total no cartão' : 'Total mensal'}:{' '}
+              <span className="font-semibold text-gray-900">{formatCurrency(total)}</span>
             </p>
           </div>
           <button
@@ -191,7 +219,7 @@ export default function Bills() {
             className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-5 h-5" />
-            Nova Conta
+            {isCard ? 'Nova Cobrança no Cartão' : 'Nova Conta'}
           </button>
         </div>
 
@@ -205,12 +233,20 @@ export default function Bills() {
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
-        ) : bills.length === 0 ? (
+        ) : visibleBills.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
-            <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma conta cadastrada</h3>
+            {isCard ? (
+              <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            ) : (
+              <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            )}
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {isCard ? 'Nenhuma cobrança no cartão cadastrada' : 'Nenhuma conta cadastrada'}
+            </h3>
             <p className="text-gray-500 mb-4">
-              Cadastre suas contas fixas para receber lembretes automaticos
+              {isCard
+                ? 'Cadastre assinaturas e cobranças do cartão (ex: Claude Code, Hostinger)'
+                : 'Cadastre suas contas fixas para receber lembretes automaticos'}
             </p>
             <button
               onClick={() => setShowModal(true)}
@@ -222,7 +258,7 @@ export default function Bills() {
           </div>
         ) : (
           <div className="grid gap-4">
-            {bills.map((bill) => {
+            {visibleBills.map((bill) => {
               const status = getDueStatus(bill);
               return (
                 <div
@@ -311,7 +347,9 @@ export default function Bills() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
             <div className="flex items-center justify-between p-4 border-b border-gray-100">
               <h2 className="text-lg font-semibold text-gray-900">
-                {editingBill ? 'Editar Conta a Pagar' : 'Nova Conta a Pagar'}
+                {isCard
+                  ? editingBill ? 'Editar Cobrança no Cartão' : 'Nova Cobrança no Cartão'
+                  : editingBill ? 'Editar Conta a Pagar' : 'Nova Conta a Pagar'}
               </h2>
               <button
                 onClick={() => {
@@ -333,7 +371,7 @@ export default function Bills() {
                   type="text"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  placeholder="Ex: Internet, Luz, Aluguel"
+                  placeholder={isCard ? 'Ex: Claude Code, Hostinger' : 'Ex: Internet, Luz, Aluguel'}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
