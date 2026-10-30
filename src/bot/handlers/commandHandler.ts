@@ -14,7 +14,6 @@ import {
   getBillByName,
   createBill,
   deleteBill,
-  getMonthlyBillsTotal,
   getUpcomingBills,
 } from '../../models/Bill';
 import { formatCurrency, formatDate } from '../../utils/formatters';
@@ -407,7 +406,6 @@ export async function handleListBills(bot: TelegramBot, msg: TelegramBot.Message
 
   try {
     const bills = await getAllBills();
-    const total = await getMonthlyBillsTotal();
     const upcoming = await getUpcomingBills(7);
 
     if (bills.length === 0) {
@@ -430,15 +428,30 @@ export async function handleListBills(bot: TelegramBot, msg: TelegramBot.Message
       message += '\n';
     }
 
-    message += '*Todas as contas:*\n';
-    for (const bill of bills) {
-      const recurring = bill.is_recurring ? '🔄' : '';
-      message += `${recurring} *${bill.name}*\n`;
-      message += `   💰 ${formatCurrency(bill.amount)} - vence dia ${bill.due_day}\n`;
+    const contas = bills.filter((b) => b.payment_method !== 'cartao');
+    const cartao = bills.filter((b) => b.payment_method === 'cartao');
+    const totalContas = contas.reduce((sum, b) => sum + Number(b.amount), 0);
+    const totalCartao = cartao.reduce((sum, b) => sum + Number(b.amount), 0);
+
+    const sections: [string, typeof bills, number][] = [
+      ['📄 *Contas:*', contas, totalContas],
+      ['💳 *Cartao de Credito:*', cartao, totalCartao],
+    ];
+    for (const [title, list, subtotal] of sections) {
+      if (list.length === 0) continue;
+      message += `${title}\n`;
+      for (const bill of list) {
+        const recurring = bill.is_recurring ? '🔄' : '';
+        message += `${recurring} *${bill.name}*\n`;
+        message += `   💰 ${formatCurrency(bill.amount)} - vence dia ${bill.due_day}\n`;
+      }
+      message += `➡️ Subtotal: *${formatCurrency(subtotal)}*\n\n`;
     }
 
-    message += `\n━━━━━━━━━━━━━━━━━━\n`;
-    message += `💵 *Total mensal: ${formatCurrency(total)}*`;
+    message += `━━━━━━━━━━━━━━━━━━\n`;
+    message += `📄 Contas: ${formatCurrency(totalContas)}\n`;
+    message += `💳 Cartao: ${formatCurrency(totalCartao)}\n`;
+    message += `💵 *Total mensal: ${formatCurrency(totalContas + totalCartao)}*`;
 
     await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
   } catch (error) {
